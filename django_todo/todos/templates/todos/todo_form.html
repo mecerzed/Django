@@ -1,0 +1,328 @@
+{% extends 'todos/base.html' %}
+{% block title %}New Task — Focus{% endblock %}
+
+{% block extra_css %}
+<style>
+    .form-container {
+        flex: 1;
+        display: flex;
+        flex-direction: column;
+        padding: 0 24px 48px;
+        overflow-y: auto;
+        max-width: 720px;
+        margin: 0 auto;
+        width: 100%;
+    }
+
+    .form-hero {
+        padding: 8px 0 32px;
+        animation: fadeUp 0.5s cubic-bezier(0.22,1,0.36,1) both;
+    }
+
+    .form-hero-icon {
+        width: 56px; height: 56px;
+        border-radius: var(--radius-lg);
+        background: rgba(200,245,90,0.08);
+        border: 1.5px solid rgba(200,245,90,0.2);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin-bottom: 20px;
+        transition: all 0.3s;
+    }
+
+    .form-hero:hover .form-hero-icon {
+        background: rgba(200,245,90,0.12);
+        transform: scale(1.05);
+    }
+
+    .form-hero-icon svg {
+        width: 24px; height: 24px;
+        stroke: var(--lime); stroke-width: 1.8; fill: none;
+    }
+
+    .form-hero-title {
+        font-size: 1.8rem;
+        font-weight: 700;
+        color: var(--text);
+        line-height: 1.15;
+        margin-bottom: 6px;
+        letter-spacing: -0.02em;
+    }
+
+    .form-hero-title .lime { color: var(--lime); }
+
+    .form-hero-sub {
+        font-size: 0.9rem;
+        color: var(--text-muted);
+        line-height: 1.5;
+    }
+
+    .field-card {
+        background: var(--bg-card);
+        border-radius: var(--radius-lg);
+        padding: 24px 20px;
+        margin-bottom: 16px;
+        border: 1px solid rgba(255,255,255,0.05);
+        animation: fadeUp 0.5s cubic-bezier(0.22,1,0.36,1) both;
+        transition: all 0.2s;
+    }
+
+    .field-card:hover {
+        border-color: rgba(255,255,255,0.08);
+    }
+
+    .field-card:nth-child(1) { animation-delay: 0.06s; }
+    .field-card:nth-child(2) { animation-delay: 0.12s; }
+    .field-card:nth-child(3) { animation-delay: 0.18s; }
+
+    .form-body p {
+        margin-bottom: 0;
+    }
+
+    .form-body p + p {
+        margin-top: 20px;
+    }
+
+    .form-body p label {
+        display: block;
+        font-size: 0.72rem;
+        font-weight: 600;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+        color: var(--text-muted);
+        margin-bottom: 10px;
+    }
+
+    .form-body p input[type="text"],
+    .form-body p input:not([type="checkbox"]):not([type="radio"]) {
+        width: 100%;
+        padding: 14px 18px;
+        background: var(--bg-input);
+        border: 1.5px solid rgba(255,255,255,0.06);
+        border-radius: var(--radius-md);
+        font-family: var(--font);
+        font-size: 0.95rem;
+        color: var(--text);
+        transition: all 0.25s cubic-bezier(0.22,1,0.36,1);
+        outline: none;
+    }
+
+    .form-body p input:focus {
+        border-color: var(--lime);
+        box-shadow: 0 0 0 4px rgba(200,245,90,0.08), 0 0 0 1px rgba(200,245,90,0.15);
+    }
+
+    .form-body p textarea {
+        width: 100%;
+        padding: 14px 18px;
+        background: var(--bg-input);
+        border: 1.5px solid rgba(255,255,255,0.06);
+        border-radius: var(--radius-md);
+        font-family: var(--font);
+        font-size: 0.95rem;
+        color: var(--text);
+        min-height: 120px;
+        resize: vertical;
+        line-height: 1.6;
+        transition: all 0.25s cubic-bezier(0.22,1,0.36,1);
+        outline: none;
+    }
+
+    .form-body p textarea:focus {
+        border-color: var(--lime);
+        box-shadow: 0 0 0 4px rgba(200,245,90,0.08), 0 0 0 1px rgba(200,245,90,0.15);
+    }
+
+    .form-body input::placeholder,
+    .form-body textarea::placeholder { color: var(--text-dim); }
+
+    .errorlist {
+        list-style: none;
+        color: var(--danger);
+        font-size: 0.8rem;
+        margin-top: 8px;
+        padding-left: 0;
+    }
+
+    .errorlist li {
+        display: flex;
+        align-items: center;
+        gap: 6px;
+    }
+
+    .errorlist li::before {
+        content: '!';
+        width: 16px; height: 16px;
+        background: var(--danger-soft);
+        color: var(--danger);
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 0.65rem;
+        font-weight: 700;
+        flex-shrink: 0;
+    }
+
+    .form-body p input[type="checkbox"] {
+        accent-color: var(--lime);
+        width: 18px; height: 18px; cursor: pointer;
+    }
+
+    .form-actions {
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+        padding-top: 8px;
+        animation: fadeUp 0.5s cubic-bezier(0.22,1,0.36,1) 0.24s both;
+    }
+
+    .form-actions .btn {
+        width: 100%;
+        padding: 16px;
+        border-radius: var(--radius-pill);
+        font-size: 0.95rem;
+    }
+
+    .tip-card {
+        background: rgba(200,245,90,0.04);
+        border: 1px solid rgba(200,245,90,0.1);
+        border-radius: var(--radius-md);
+        padding: 16px 18px;
+        margin-bottom: 24px;
+        animation: fadeUp 0.5s cubic-bezier(0.22,1,0.36,1) 0.18s both;
+        display: flex;
+        align-items: flex-start;
+        gap: 12px;
+    }
+
+    .tip-icon {
+        width: 28px; height: 28px;
+        background: rgba(200,245,90,0.1);
+        border-radius: var(--radius-sm);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        flex-shrink: 0;
+    }
+
+    .tip-icon svg {
+        width: 14px; height: 14px;
+        stroke: var(--lime); stroke-width: 2; fill: none;
+    }
+
+    .tip-content {
+        flex: 1;
+    }
+
+    .tip-label {
+        font-size: 0.72rem;
+        font-weight: 700;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+        color: var(--lime);
+        margin-bottom: 4px;
+    }
+
+    .tip-text {
+        font-size: 0.82rem;
+        color: var(--text-muted);
+        line-height: 1.5;
+    }
+
+    .tip-text em {
+        color: var(--text-secondary);
+        font-style: normal;
+        font-weight: 500;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+
+<nav class="top-nav">
+    <a href="{% url 'todo_list' %}" class="nav-icon-btn" aria-label="Back">
+        <svg viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg>
+    </a>
+    <span class="nav-title">New Task</span>
+    <a href="{% url 'todo_list' %}" class="nav-icon-btn" aria-label="Close">
+        <svg viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+    </a>
+</nav>
+
+<div class="form-container">
+
+    <div class="form-hero">
+        <div class="form-hero-icon">
+            <svg viewBox="0 0 24 24">
+                <path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/>
+                <polyline points="14 2 14 8 20 8"/>
+                <line x1="12" y1="11" x2="12" y2="17"/>
+                <line x1="9" y1="14" x2="15" y2="14"/>
+            </svg>
+        </div>
+        <div class="form-hero-title">Create <span class="lime">New Task</span></div>
+        <div class="form-hero-sub">Break it down. Write it clear. Make it happen.</div>
+    </div>
+
+    <div class="quote-strip" style="margin: 0 0 24px; width: 100%;">
+        <div class="q-text" id="form-quote">A goal without a plan is just a wish.</div>
+        <div class="q-author" id="form-author">Antoine de Saint-Exupéry</div>
+    </div>
+
+    <div class="field-card">
+        <form method="post" id="todo-form">
+            {% csrf_token %}
+            <div class="form-body">
+                {{ form.as_p }}
+            </div>
+        </form>
+    </div>
+
+    <div class="tip-card">
+        <div class="tip-icon">
+            <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>
+        </div>
+        <div class="tip-content">
+            <div class="tip-label">Pro tip</div>
+            <div class="tip-text">Start with a verb — <em>"Write report"</em> beats <em>"Report"</em>. Clarity kills procrastination.</div>
+        </div>
+    </div>
+
+    <div class="form-actions">
+        <button type="submit" form="todo-form" class="btn btn-lime">
+            <svg viewBox="0 0 24 24"><path d="M19 21H5a2 2 0 01-2-2V5a2 2 0 012-2h11l5 5v13a2 2 0 01-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/></svg>
+            Save Task
+        </button>
+        <a href="{% url 'todo_list' %}" class="btn btn-ghost">Cancel</a>
+    </div>
+
+</div>
+
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    const formQuotes = [
+        { text: "A goal without a plan is just a wish.", author: "Antoine de Saint-Exupéry" },
+        { text: "What you do today can improve all your tomorrows.", author: "Ralph Marston" },
+        { text: "Done is better than perfect.", author: "Sheryl Sandberg" },
+        { text: "Every accomplishment starts with the decision to try.", author: "John F. Kennedy" },
+        { text: "You don't have to see the whole staircase, just take the first step.", author: "Martin Luther King Jr." },
+        { text: "The best way to predict the future is to create it.", author: "Peter Drucker" },
+        { text: "Don't watch the clock; do what it does. Keep going.", author: "Sam Levenson" },
+        { text: "Success is not final, failure is not fatal: it is the courage to continue that counts.", author: "Winston Churchill" },
+        { text: "The secret of getting ahead is getting started.", author: "Mark Twain" },
+        { text: "Your future is created by what you do today, not tomorrow.", author: "Robert Kiyosaki" },
+        { text: "Start where you are. Use what you have. Do what you can.", author: "Arthur Ashe" },
+        { text: "Small deeds done are better than great deeds planned.", author: "Peter Marshall" },
+    ];
+    const fq = formQuotes[new Date().getDate() % formQuotes.length];
+    document.getElementById('form-quote').textContent = fq.text;
+    document.getElementById('form-author').textContent = fq.author;
+
+    const fi = document.querySelector('#todo-form input:not([type="hidden"]), #todo-form textarea');
+    if (fi) setTimeout(() => fi.focus(), 300);
+</script>
+{% endblock %}

@@ -1,0 +1,1173 @@
+{% extends 'todos/base.html' %}
+{% block title %}My Tasks{% endblock %}
+
+{% block extra_css %}
+<style>
+    .greeting-section {
+        padding: 8px 24px 24px;
+        max-width: 720px;
+        margin: 0 auto;
+        width: 100%;
+    }
+
+    .greeting-name {
+        font-size: 1.75rem;
+        font-weight: 700;
+        color: var(--text);
+        line-height: 1.2;
+        letter-spacing: -0.02em;
+    }
+
+    .greeting-name .lime { 
+        color: var(--lime);
+        font-weight: 800;
+    }
+
+    .greeting-sub {
+        font-size: 0.9rem;
+        color: var(--text-muted);
+        margin-top: 6px;
+        font-weight: 400;
+    }
+
+    .stats-row {
+        display: flex;
+        gap: 12px;
+        padding: 0 24px;
+        max-width: 720px;
+        margin: 0 auto 20px;
+        width: 100%;
+    }
+
+    .stat-pill {
+        flex: 1;
+        background: var(--bg-card);
+        border: 1px solid rgba(255,255,255,0.05);
+        border-radius: var(--radius-lg);
+        padding: 14px 16px;
+        text-align: center;
+        transition: all 0.2s;
+    }
+
+    .stat-pill:hover {
+        border-color: rgba(255,255,255,0.1);
+        transform: translateY(-1px);
+    }
+
+    .stat-value {
+        font-size: 1.3rem;
+        font-weight: 800;
+        color: var(--text);
+        line-height: 1;
+    }
+
+    .stat-value.done { color: var(--lime); }
+
+    .stat-label {
+        font-size: 0.7rem;
+        color: var(--text-muted);
+        margin-top: 6px;
+        text-transform: uppercase;
+        letter-spacing: 0.08em;
+        font-weight: 600;
+    }
+
+    .month-row {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 10px;
+        margin-bottom: 20px;
+        padding: 0 24px;
+        max-width: 720px;
+        margin: 0 auto 20px;
+        cursor: pointer;
+        user-select: none;
+        width: 100%;
+        transition: all 0.2s;
+    }
+
+    .month-label {
+        font-size: 1.1rem;
+        font-weight: 700;
+        color: var(--text-secondary);
+        transition: color 0.2s;
+        letter-spacing: -0.01em;
+    }
+
+    .month-row:hover .month-label { color: var(--lime); }
+
+    .month-caret {
+        width: 28px; height: 28px;
+        background: rgba(255,255,255,0.05);
+        border-radius: var(--radius-md);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        transition: all 0.3s cubic-bezier(0.22,1,0.36,1);
+    }
+
+    .month-row:hover .month-caret {
+        background: rgba(200,245,90,0.12);
+        transform: rotate(180deg);
+    }
+
+    .month-caret svg {
+        width: 13px; height: 13px;
+        stroke: var(--text-muted); stroke-width: 2.5; fill: none;
+        transition: stroke 0.2s;
+    }
+
+    .month-row:hover .month-caret svg { stroke: var(--lime); }
+
+    .date-scroller-wrap {
+        padding: 0 24px 28px;
+        overflow: hidden;
+        max-width: 720px;
+        margin: 0 auto;
+        width: 100%;
+    }
+
+    .date-scroller {
+        display: flex;
+        gap: 8px;
+        overflow-x: auto;
+        padding-bottom: 6px;
+        scrollbar-width: none;
+        -webkit-overflow-scrolling: touch;
+    }
+
+    .date-scroller::-webkit-scrollbar { display: none; }
+
+    .date-pill {
+        flex-shrink: 0;
+        width: 56px;
+        height: 76px;
+        border-radius: var(--radius-xl);
+        background: var(--bg-card);
+        border: 1px solid rgba(255,255,255,0.05);
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        cursor: pointer;
+        transition: all 0.25s cubic-bezier(0.22,1,0.36,1);
+        gap: 4px;
+    }
+
+    .date-pill:hover { 
+        background: #253352; 
+        border-color: rgba(255,255,255,0.1);
+        transform: translateY(-2px);
+    }
+
+    .date-pill.active {
+        background: var(--lime);
+        border-color: var(--lime);
+        box-shadow: var(--shadow-lime);
+    }
+
+    .date-num {
+        font-size: 1.15rem;
+        font-weight: 800;
+        color: var(--text);
+        line-height: 1;
+        transition: color 0.2s;
+    }
+
+    .date-pill.active .date-num,
+    .date-pill.active .date-day { color: #0f172a; }
+
+    .date-day {
+        font-size: 0.7rem;
+        font-weight: 500;
+        color: var(--text-muted);
+        transition: color 0.2s;
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+    }
+
+    .timeline-section {
+        background: linear-gradient(180deg, #0d1526 0%, var(--bg) 100%);
+        border-radius: 28px 28px 0 0;
+        padding: 28px 0 0;
+        flex: 1;
+        min-height: 300px;
+        position: relative;
+    }
+
+    .timeline-section::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 50%;
+        transform: translateX(-50%);
+        width: 40px;
+        height: 4px;
+        background: rgba(255,255,255,0.1);
+        border-radius: 2px;
+        margin-top: 12px;
+    }
+
+    .timeline-inner {
+        padding: 0 24px;
+        max-width: 720px;
+        margin: 0 auto;
+    }
+
+    .timeline-row {
+        display: grid;
+        grid-template-columns: 52px 20px 1fr;
+        gap: 0 14px;
+        margin-bottom: 0;
+        animation: fadeUp 0.5s cubic-bezier(0.22,1,0.36,1) both;
+    }
+
+    .timeline-row:nth-child(1) { animation-delay: 0.04s; }
+    .timeline-row:nth-child(2) { animation-delay: 0.1s; }
+    .timeline-row:nth-child(3) { animation-delay: 0.16s; }
+    .timeline-row:nth-child(4) { animation-delay: 0.22s; }
+    .timeline-row:nth-child(n+5) { animation-delay: 0.28s; }
+
+    .time-label {
+        font-size: 0.72rem;
+        font-weight: 600;
+        color: var(--text-muted);
+        padding-top: 18px;
+        text-align: right;
+        white-space: nowrap;
+        letter-spacing: -0.01em;
+    }
+
+    .timeline-line-col {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        padding-top: 18px;
+    }
+
+    .tl-dot {
+        width: 10px; height: 10px;
+        border-radius: 50%;
+        background: var(--text-dim);
+        flex-shrink: 0;
+        border: 2px solid var(--bg);
+        transition: all 0.3s;
+    }
+
+    .tl-line {
+        flex: 1;
+        width: 2px;
+        background: repeating-linear-gradient(
+            to bottom,
+            var(--text-dim) 0, var(--text-dim) 4px,
+            transparent 4px, transparent 10px
+        );
+        margin-top: 6px;
+        opacity: 0.5;
+    }
+
+    .task-card-wrap {
+        padding-bottom: 20px;
+    }
+
+    .task-card {
+        border-radius: var(--radius-lg);
+        overflow: hidden;
+        box-shadow: var(--shadow-md);
+        transition: all 0.3s cubic-bezier(0.22,1,0.36,1);
+        position: relative;
+    }
+
+    .task-card::before {
+        content: '';
+        position: absolute;
+        inset: 0;
+        border-radius: inherit;
+        padding: 1.5px;
+        background: linear-gradient(135deg, rgba(255,255,255,0.1), transparent 50%);
+        -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+        mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+        -webkit-mask-composite: xor;
+        mask-composite: exclude;
+        pointer-events: none;
+        opacity: 0;
+        transition: opacity 0.3s;
+    }
+
+    .task-card:hover::before { opacity: 1; }
+
+    .task-card:hover {
+        transform: translateY(-3px);
+        box-shadow: var(--shadow-lg);
+    }
+
+    .card-header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 12px 16px;
+        border-radius: var(--radius-lg) var(--radius-lg) 0 0;
+    }
+
+    .status-badge {
+        font-size: 0.68rem;
+        font-weight: 700;
+        color: rgba(0,0,0,0.5);
+        letter-spacing: 0.04em;
+        text-transform: uppercase;
+        padding: 3px 10px;
+        background: rgba(0,0,0,0.1);
+        border-radius: var(--radius-pill);
+    }
+
+    .card-meta-right {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+    }
+
+    .avatar-stack {
+        display: flex;
+        align-items: center;
+    }
+
+    .avatar {
+        width: 26px; height: 26px;
+        border-radius: 50%;
+        border: 2px solid rgba(0,0,0,0.12);
+        background: #4a5568;
+        margin-left: -7px;
+        overflow: hidden;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 0.6rem;
+        font-weight: 700;
+        color: white;
+        transition: transform 0.2s;
+    }
+
+    .avatar:first-child { margin-left: 0; }
+    .avatar:hover { transform: translateY(-2px); z-index: 2; }
+
+    .avatar-add {
+        width: 26px; height: 26px;
+        border-radius: 50%;
+        background: rgba(0,0,0,0.1);
+        border: 2px dashed rgba(0,0,0,0.15);
+        margin-left: -4px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 0.7rem;
+        font-weight: 700;
+        color: rgba(0,0,0,0.4);
+        cursor: pointer;
+        transition: all 0.2s;
+    }
+
+    .avatar-add:hover {
+        background: rgba(0,0,0,0.2);
+        border-style: solid;
+    }
+
+    .progress-pill {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+    }
+
+    .prog-track {
+        width: 60px;
+        height: 4px;
+        background: rgba(0,0,0,0.12);
+        border-radius: var(--radius-pill);
+        overflow: hidden;
+    }
+
+    .prog-fill {
+        height: 100%;
+        border-radius: var(--radius-pill);
+        background: rgba(0,0,0,0.4);
+        transition: width 0.8s cubic-bezier(0.22,1,0.36,1);
+    }
+
+    .prog-pct {
+        font-size: 0.68rem;
+        font-weight: 700;
+        color: rgba(0,0,0,0.5);
+        min-width: 30px;
+        text-align: right;
+        letter-spacing: -0.01em;
+    }
+
+    .card-body {
+        display: flex;
+        align-items: center;
+        gap: 14px;
+        padding: 16px;
+    }
+
+    .task-icon {
+        width: 46px; height: 46px;
+        flex-shrink: 0;
+        background: rgba(0,0,0,0.15);
+        border-radius: 12px;
+        transform: rotate(45deg);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        transition: all 0.3s;
+    }
+
+    .task-card:hover .task-icon {
+        transform: rotate(45deg) scale(1.05);
+    }
+
+    .task-icon-inner {
+        transform: rotate(-45deg);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+
+    .task-icon-inner svg {
+        width: 20px; height: 20px;
+        stroke: rgba(0,0,0,0.55); stroke-width: 1.8; fill: none;
+    }
+
+    .task-text { flex: 1; min-width: 0; }
+
+    .task-title {
+        font-size: 0.95rem;
+        font-weight: 700;
+        color: rgba(0,0,0,0.85);
+        display: block;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        letter-spacing: -0.01em;
+    }
+
+    .task-sub {
+        font-size: 0.78rem;
+        color: rgba(0,0,0,0.4);
+        margin-top: 3px;
+        font-weight: 400;
+    }
+
+    .toggle-btn {
+        background: none;
+        border: none;
+        cursor: pointer;
+        padding: 6px;
+        border-radius: var(--radius-sm);
+        transition: all 0.2s;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+
+    .toggle-btn:hover { background: rgba(0,0,0,0.08); }
+
+    .toggle-btn svg {
+        width: 20px; height: 20px;
+        stroke: rgba(0,0,0,0.4);
+        stroke-width: 2;
+        fill: none;
+        transition: all 0.2s;
+    }
+
+    .toggle-btn:hover svg { stroke: rgba(0,0,0,0.7); }
+
+    .theme-lime   .card-header { background: #b8e83a; }
+    .theme-lime   .card-body   { background: #c8f55a; }
+    .theme-lime   .prog-fill   { background: #4a7a00; }
+
+    .theme-cyan   .card-header { background: #00bcd4; }
+    .theme-cyan   .card-body   { background: #22d4ff; }
+    .theme-cyan   .task-icon   { background: rgba(0,0,0,0.18); }
+
+    .theme-lavender .card-header { background: #b49ce0; }
+    .theme-lavender .card-body   { background: #c9b8f0; }
+    .theme-lavender .task-icon   { background: rgba(0,0,0,0.15); }
+
+    .theme-blue   .card-header { background: #2563eb; }
+    .theme-blue   .card-body   { background: #3b82f6; }
+    .theme-blue   .task-title  { color: rgba(255,255,255,0.95); }
+    .theme-blue   .task-sub    { color: rgba(255,255,255,0.55); }
+    .theme-blue   .status-badge { color: rgba(255,255,255,0.8); background: rgba(255,255,255,0.15); }
+    .theme-blue   .prog-pct    { color: rgba(255,255,255,0.7); }
+    .theme-blue   .toggle-btn:hover { background: rgba(255,255,255,0.1); }
+    .theme-blue   .toggle-btn svg { stroke: rgba(255,255,255,0.5); }
+    .theme-blue   .toggle-btn:hover svg { stroke: rgba(255,255,255,0.9); }
+
+    .remove-link {
+        display: inline-flex;
+        align-items: center;
+        gap: 4px;
+        font-size: 0.7rem;
+        color: var(--text-dim);
+        text-decoration: none;
+        padding: 4px 8px;
+        border-radius: var(--radius-xs);
+        transition: all 0.2s;
+        margin-top: 6px;
+        float: right;
+    }
+
+    .remove-link:hover {
+        color: var(--danger);
+        background: var(--danger-soft);
+    }
+
+    .remove-link svg {
+        width: 12px; height: 12px;
+        stroke: currentColor; stroke-width: 2; fill: none;
+    }
+
+    .empty-state {
+        text-align: center;
+        padding: 64px 24px;
+        animation: fadeUp 0.6s cubic-bezier(0.22,1,0.36,1) both;
+    }
+
+    .empty-icon {
+        width: 80px; height: 80px;
+        margin: 0 auto 20px;
+        background: var(--bg-card);
+        border-radius: var(--radius-xl);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 2.5rem;
+        border: 1px solid rgba(255,255,255,0.05);
+    }
+
+    .empty-title {
+        font-size: 1.1rem;
+        font-weight: 700;
+        color: var(--text);
+        margin-bottom: 8px;
+        letter-spacing: -0.01em;
+    }
+
+    .empty-sub {
+        font-size: 0.85rem;
+        color: var(--text-muted);
+        margin-bottom: 32px;
+        line-height: 1.6;
+        max-width: 280px;
+        margin-left: auto;
+        margin-right: auto;
+    }
+
+    .fab {
+        position: fixed;
+        bottom: 24px;
+        right: 24px;
+        width: 56px; height: 56px;
+        border-radius: 50%;
+        background: var(--lime);
+        color: #0f172a;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        text-decoration: none;
+        box-shadow: var(--shadow-lime);
+        transition: all 0.3s cubic-bezier(0.22,1,0.36,1);
+        z-index: 10;
+        border: none;
+        cursor: pointer;
+    }
+
+    .fab:hover { 
+        transform: translateY(-4px) scale(1.08); 
+        box-shadow: 0 8px 30px rgba(200,245,90,0.35);
+    }
+
+    .fab:active { transform: translateY(-1px) scale(0.98); }
+
+    .fab svg {
+        width: 22px; height: 22px;
+        stroke: currentColor; stroke-width: 2.5; fill: none;
+    }
+
+    .username-modal-overlay {
+        display: none;
+        position: fixed;
+        inset: 0;
+        background: rgba(0,0,0,0.75);
+        backdrop-filter: blur(8px);
+        -webkit-backdrop-filter: blur(8px);
+        z-index: 100;
+        align-items: flex-end;
+        justify-content: center;
+        animation: fadeIn 0.2s;
+    }
+
+    .username-modal-overlay.active { display: flex; }
+
+    .username-modal {
+        background: var(--bg-elevated);
+        border-radius: 24px 24px 0 0;
+        padding: 28px 24px 40px;
+        width: 100%;
+        max-width: 720px;
+        border-top: 1px solid rgba(255,255,255,0.06);
+        animation: slideUp 0.35s cubic-bezier(0.22,1,0.36,1) both;
+    }
+
+    @keyframes slideUp {
+        from { transform: translateY(100%); opacity: 0.5; }
+        to   { transform: translateY(0); opacity: 1; }
+    }
+
+    .modal-title {
+        font-size: 1.2rem;
+        font-weight: 700;
+        color: var(--text);
+        margin-bottom: 6px;
+        letter-spacing: -0.01em;
+    }
+
+    .modal-sub {
+        font-size: 0.85rem;
+        color: var(--text-muted);
+        margin-bottom: 24px;
+        line-height: 1.5;
+    }
+
+    .modal-input {
+        width: 100%;
+        padding: 16px 20px;
+        background: var(--bg-input);
+        border: 1.5px solid rgba(255,255,255,0.08);
+        border-radius: var(--radius-lg);
+        font-family: var(--font);
+        font-size: 1rem;
+        color: var(--text);
+        margin-bottom: 16px;
+        transition: all 0.2s;
+        outline: none;
+    }
+
+    .modal-input:focus {
+        border-color: var(--lime);
+        box-shadow: 0 0 0 4px rgba(200,245,90,0.1);
+    }
+
+    .modal-btn {
+        width: 100%;
+        padding: 16px;
+        border-radius: var(--radius-pill);
+        background: var(--lime);
+        color: #0f172a;
+        font-family: var(--font);
+        font-size: 0.95rem;
+        font-weight: 700;
+        border: none;
+        cursor: pointer;
+        transition: all 0.2s;
+        letter-spacing: -0.01em;
+    }
+
+    .modal-btn:hover { 
+        transform: translateY(-1px);
+        box-shadow: var(--shadow-lime);
+    }
+
+    .modal-btn:active { transform: translateY(0); }
+
+    .calendar-modal-overlay {
+        display: none;
+        position: fixed;
+        inset: 0;
+        background: rgba(0,0,0,0.8);
+        backdrop-filter: blur(12px);
+        -webkit-backdrop-filter: blur(12px);
+        z-index: 200;
+        align-items: flex-start;
+        justify-content: center;
+        overflow-y: auto;
+        padding: 40px 16px;
+        animation: fadeIn 0.2s;
+    }
+
+    .calendar-modal-overlay.active { display: flex; }
+
+    .calendar-modal {
+        background: var(--bg-elevated);
+        border-radius: var(--radius-xl);
+        padding: 28px;
+        width: 100%;
+        max-width: 900px;
+        margin-bottom: 40px;
+        border: 1px solid rgba(255,255,255,0.06);
+        animation: scaleIn 0.3s cubic-bezier(0.22,1,0.36,1) both;
+    }
+
+    .calendar-header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        margin-bottom: 24px;
+    }
+
+    .calendar-header .modal-title {
+        font-size: 1.3rem;
+        font-weight: 700;
+        color: var(--text);
+        letter-spacing: -0.02em;
+    }
+
+    .close-btn {
+        width: 36px; height: 36px;
+        border-radius: var(--radius-md);
+        background: rgba(255,255,255,0.05);
+        border: 1px solid rgba(255,255,255,0.08);
+        color: var(--text-muted);
+        font-size: 1rem;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        transition: all 0.2s;
+    }
+
+    .close-btn:hover {
+        background: var(--danger-soft);
+        color: var(--danger);
+        border-color: rgba(239,68,68,0.2);
+    }
+
+    .months-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+        gap: 16px;
+    }
+
+    .month-box {
+        background: rgba(255,255,255,0.02);
+        border: 1px solid rgba(255,255,255,0.05);
+        border-radius: var(--radius-lg);
+        padding: 16px;
+        transition: all 0.25s cubic-bezier(0.22,1,0.36,1);
+    }
+
+    .month-box:hover {
+        border-color: rgba(200,245,90,0.15);
+        background: rgba(255,255,255,0.04);
+        transform: translateY(-2px);
+    }
+
+    .month-box h4 {
+        text-align: center;
+        color: var(--lime);
+        margin-bottom: 12px;
+        font-size: 0.8rem;
+        text-transform: uppercase;
+        letter-spacing: 0.1em;
+        font-weight: 700;
+    }
+
+    .calendar-grid {
+        display: grid;
+        grid-template-columns: repeat(7, 1fr);
+        gap: 2px;
+        text-align: center;
+    }
+
+    .day-label {
+        font-size: 0.6rem;
+        color: var(--text-muted);
+        font-weight: 600;
+        padding: 6px 0;
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+    }
+
+    .day-cell {
+        aspect-ratio: 1;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 0.78rem;
+        border-radius: 6px;
+        color: var(--text-secondary);
+        cursor: pointer;
+        transition: all 0.15s;
+        font-weight: 500;
+    }
+
+    .day-cell:hover {
+        background: rgba(200,245,90,0.12);
+        color: var(--text);
+    }
+
+    .day-cell.other-month {
+        color: var(--text-dim);
+    }
+
+    .day-cell.today {
+        background: var(--lime);
+        color: #0f172a;
+        font-weight: 800;
+        box-shadow: 0 2px 8px rgba(200,245,90,0.3);
+    }
+
+    .day-cell.selected {
+        outline: 2px solid var(--lime);
+        outline-offset: -2px;
+        background: rgba(200,245,90,0.1);
+    }
+
+    @media (max-width: 640px) {
+        .months-grid { grid-template-columns: 1fr; }
+        .greeting-name { font-size: 1.5rem; }
+    }
+
+    @media (min-width: 768px) {
+        .fab {
+            bottom: 32px;
+            right: 32px;
+            width: 60px; height: 60px;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+
+<nav class="top-nav">
+    <a href="{% url 'todo_list' %}" class="nav-icon-btn" aria-label="Back">
+        <svg viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg>
+    </a>
+    <span class="nav-title">My Tasks</span>
+    <button class="nav-icon-btn" onclick="showUsernameModal()" aria-label="Profile">
+        <svg viewBox="0 0 24 24"><circle cx="12" cy="8" r="4"/><path d="M4 20c0-4 3.6-7 8-7s8 3 8 7"/></svg>
+    </button>
+</nav>
+
+<div class="greeting-section anim anim-d1">
+    <div class="greeting-name">Hey, <span class="lime username-display">Champion</span> 👋</div>
+    <div class="greeting-sub">Ready to make today count?</div>
+</div>
+
+<div class="stats-row anim anim-d2">
+    <div class="stat-pill">
+        <div class="stat-value">{{ todos|length }}</div>
+        <div class="stat-label">Total</div>
+    </div>
+    <div class="stat-pill">
+        <div class="stat-value done">{{ todos|length }}</div>
+        <div class="stat-label">Active</div>
+    </div>
+    <div class="stat-pill">
+        <div class="stat-value">0</div>
+        <div class="stat-label">Done</div>
+    </div>
+</div>
+
+<div class="quote-strip anim anim-d2" id="quote-strip">
+    <div class="q-text" id="q-text">The secret of getting ahead is getting started.</div>
+    <div class="q-author" id="q-author">Mark Twain</div>
+</div>
+
+<div class="month-row anim anim-d3" onclick="showCalendarModal()" role="button" tabindex="0">
+    <span class="month-label" id="month-label">January 2025</span>
+    <div class="month-caret">
+        <svg viewBox="0 0 24 24"><polyline points="6 9 12 15 18 9"/></svg>
+    </div>
+</div>
+
+<div class="date-scroller-wrap anim anim-d3">
+    <div class="date-scroller" id="date-scroller"></div>
+</div>
+
+<div class="timeline-section">
+    <div class="timeline-inner">
+
+    {% if todos %}
+        {% for todo in todos %}
+        {% cycle 'lime' 'cyan' 'lavender' 'blue' as card_theme silent %}
+
+        <div class="timeline-row">
+            <div class="time-label">
+                {% cycle '08:00' '10:00' '01:00' '03:00' '05:00' '07:00' '09:00' %}
+            </div>
+
+            <div class="timeline-line-col">
+                <div class="tl-dot"></div>
+                <div class="tl-line"></div>
+            </div>
+
+            <div class="task-card-wrap">
+                <div class="task-card theme-{{ card_theme }}">
+
+                    <div class="card-header">
+                        <span class="status-badge">
+                            {% if todo.completed %}Done{% else %}In Progress{% endif %}
+                        </span>
+                        <div class="card-meta-right">
+                            <div class="avatar-stack">
+                                <div class="avatar" style="background:linear-gradient(135deg,#e67e22,#d35400);">Y</div>
+                                <div class="avatar" style="background:linear-gradient(135deg,#2ecc71,#27ae60);">T</div>
+                                <div class="avatar" style="background:linear-gradient(135deg,#9b59b6,#8e44ad);">A</div>
+                                <div class="avatar-add">+</div>
+                            </div>
+                            <div class="progress-pill">
+                                <div class="prog-track">
+                                    <div class="prog-fill"style="width: {% if todo.completed %}100{% else %}{% widthratio forloop.counter todos|length 100 %}{% endif %}%;"></div>
+                                </div>
+                                <span class="prog-pct">{% if todo.completed %}100{% else %}{% widthratio forloop.counter 1 20 %}%{% endif %}</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="card-body">
+                        <div class="task-icon">
+                            <div class="task-icon-inner">
+                                <svg viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="3"/><line x1="9" y1="9" x2="15" y2="9"/><line x1="9" y1="13" x2="15" y2="13"/><line x1="9" y1="17" x2="12" y2="17"/></svg>
+                            </div>
+                        </div>
+                        <div class="task-text">
+                            <span class="task-title">{{ todo.title }}</span>
+                            <div class="task-sub">
+                                {% if todo.description %}{{ todo.description }}{% else %}Personal task{% endif %}
+                            </div>
+                        </div>
+                        <form method="post" action="{% url 'todo_toggle' todo.id %}" style="display:contents;">
+                            {% csrf_token %}
+                            <button type="submit" class="toggle-btn" title="Toggle status">
+                                <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><polyline points="8 12 11 15 16 9"/></svg>
+                            </button>
+                        </form>
+                    </div>
+                </div>
+
+                <a href="{% url 'todo_delete' todo.id %}" class="remove-link">
+                    <svg viewBox="0 0 24 24"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14H6L5 6"/><path d="M10 11v6M14 11v6"/></svg>
+                    Remove
+                </a>
+            </div>
+        </div>
+        {% endfor %}
+
+    {% else %}
+        <div class="empty-state">
+            <div class="empty-icon">✨</div>
+            <div class="empty-title">All caught up</div>
+            <div class="empty-sub">Your task list is empty. Add your first task and start building momentum today.</div>
+            <a href="{% url 'todo_create' %}" class="btn btn-lime">
+                <svg viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+                Create Task
+            </a>
+        </div>
+    {% endif %}
+
+    </div>
+</div>
+
+<a href="{% url 'todo_create' %}" class="fab" title="New Task" aria-label="Create new task">
+    <svg viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+</a>
+
+<div class="username-modal-overlay" id="username-modal">
+    <div class="username-modal">
+        <div class="modal-title">What's your name?</div>
+        <div class="modal-sub">Personalize your experience. We'll greet you every time you return.</div>
+        <input type="text" class="modal-input" id="username-input" placeholder="e.g. Jordan, Alex, Sarah..." maxlength="24" autocomplete="name">
+        <button class="modal-btn" onclick="saveUsername()">Continue</button>
+    </div>
+</div>
+
+<div class="calendar-modal-overlay" id="calendar-modal">
+    <div class="calendar-modal">
+        <div class="calendar-header">
+            <div class="modal-title" id="calendar-year-title">2025</div>
+            <button class="close-btn" onclick="hideCalendarModal()" aria-label="Close calendar">✕</button>
+        </div>
+        <div class="months-grid" id="months-grid"></div>
+    </div>
+</div>
+
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    const quotes = [
+        { text: "The secret of getting ahead is getting started.", author: "Mark Twain" },
+        { text: "Focus on being productive instead of busy.", author: "Tim Ferriss" },
+        { text: "It does not matter how slowly you go, so long as you do not stop.", author: "Confucius" },
+        { text: "You don't have to be great to start, but you have to start to be great.", author: "Zig Ziglar" },
+        { text: "The way to get started is to quit talking and begin doing.", author: "Walt Disney" },
+        { text: "Action is the foundational key to all success.", author: "Pablo Picasso" },
+        { text: "Small steps, taken consistently, compound into extraordinary results.", author: "James Clear" },
+        { text: "Do the hard jobs first. The easy jobs will take care of themselves.", author: "Dale Carnegie" },
+        { text: "Discipline is choosing between what you want now and what you want most.", author: "Abraham Lincoln" },
+        { text: "Don't count the days — make the days count.", author: "Muhammad Ali" },
+        { text: "Either you run the day, or the day runs you.", author: "Jim Rohn" },
+        { text: "You are never too old to set another goal or to dream a new dream.", author: "C.S. Lewis" },
+        { text: "The difference between ordinary and extraordinary is that little extra.", author: "Jimmy Johnson" },
+        { text: "Don't wish it were easier. Wish you were better.", author: "Jim Rohn" },
+        { text: "Success is the sum of small efforts, repeated day in and day out.", author: "Robert Collier" },
+        { text: "What lies behind us and what lies before us are tiny matters compared to what lies within us.", author: "Ralph Waldo Emerson" },
+        { text: "Believe you can and you're halfway there.", author: "Theodore Roosevelt" },
+        { text: "Your future is created by what you do today, not tomorrow.", author: "Robert Kiyosaki" },
+        { text: "The only way to do great work is to love what you do.", author: "Steve Jobs" },
+        { text: "Start where you are. Use what you have. Do what you can.", author: "Arthur Ashe" },
+        { text: "Dream big. Start small. Act now.", author: "Robin Sharma" },
+        { text: "Productivity is being able to do things that you were never able to do before.", author: "Franz Kafka" },
+        { text: "Amateurs sit and wait for inspiration, the rest of us just get up and go to work.", author: "Stephen King" },
+        { text: "The best time to plant a tree was 20 years ago. The second best time is now.", author: "Chinese Proverb" },
+        { text: "What you get by achieving your goals is not as important as what you become by achieving your goals.", author: "Zig Ziglar" },
+    ];
+
+    const today = new Date();
+    const quoteIndex = (today.getDate() + today.getMonth() * 31 + today.getFullYear()) % quotes.length;
+    const q = quotes[quoteIndex];
+    document.getElementById('q-text').textContent = q.text;
+    document.getElementById('q-author').textContent = q.author;
+
+    const months = ["January","February","March","April","May","June","July","August","September","October","November","December"];
+    document.getElementById('month-label').textContent = `${months[today.getMonth()]} ${today.getFullYear()}`;
+
+    const dayNames = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
+    const scroller = document.getElementById('date-scroller');
+    const todayDate = today.getDate();
+
+    for (let offset = -3; offset <= 3; offset++) {
+        const d = new Date(today);
+        d.setDate(todayDate + offset);
+        const pill = document.createElement('div');
+        pill.className = 'date-pill' + (offset === 0 ? ' active' : '');
+        pill.innerHTML = `<span class="date-num">${d.getDate()}</span><span class="date-day">${dayNames[d.getDay()]}</span>`;
+        pill.addEventListener('click', () => {
+            document.querySelectorAll('.date-pill').forEach(p => p.classList.remove('active'));
+            pill.classList.add('active');
+        });
+        scroller.appendChild(pill);
+    }
+
+    setTimeout(() => {
+        const pills = scroller.querySelectorAll('.date-pill');
+        if (pills[3]) {
+            const pl = pills[3];
+            scroller.scrollLeft = pl.offsetLeft - (scroller.offsetWidth / 2) + (pl.offsetWidth / 2);
+        }
+    }, 50);
+
+    function showUsernameModal() {
+        document.getElementById('username-modal').classList.add('active');
+        document.getElementById('username-input').value = getUser();
+        setTimeout(() => document.getElementById('username-input').focus(), 100);
+    }
+
+    function saveUsername() {
+        const val = document.getElementById('username-input').value.trim();
+        if (!val) return;
+        setUser(val);
+        document.querySelectorAll('.username-display').forEach(el => el.textContent = val);
+        document.getElementById('username-modal').classList.remove('active');
+    }
+
+    document.getElementById('username-input').addEventListener('keydown', e => {
+        if (e.key === 'Enter') saveUsername();
+    });
+
+    document.getElementById('username-modal').addEventListener('click', e => {
+        if (e.target === document.getElementById('username-modal')) {
+            document.getElementById('username-modal').classList.remove('active');
+        }
+    });
+
+    if (!getUser()) setTimeout(showUsernameModal, 800);
+
+    function showCalendarModal() {
+        document.getElementById('calendar-modal').classList.add('active');
+        document.body.style.overflow = 'hidden';
+        generateYearCalendar();
+    }
+
+    function hideCalendarModal() {
+        document.getElementById('calendar-modal').classList.remove('active');
+        document.body.style.overflow = '';
+    }
+
+    document.getElementById('calendar-modal').addEventListener('click', e => {
+        if (e.target === document.getElementById('calendar-modal')) hideCalendarModal();
+    });
+
+    document.addEventListener('keydown', e => {
+        if (e.key === 'Escape') hideCalendarModal();
+    });
+
+    function generateYearCalendar() {
+        const grid = document.getElementById('months-grid');
+        const year = today.getFullYear();
+        document.getElementById('calendar-year-title').textContent = year;
+        grid.innerHTML = '';
+        const calDayNames = ['S','M','T','W','T','F','S'];
+
+        for (let m = 0; m < 12; m++) {
+            const monthBox = document.createElement('div');
+            monthBox.className = 'month-box';
+
+            const title = document.createElement('h4');
+            title.textContent = months[m];
+            monthBox.appendChild(title);
+
+            const calGrid = document.createElement('div');
+            calGrid.className = 'calendar-grid';
+
+            calDayNames.forEach(d => {
+                const lbl = document.createElement('div');
+                lbl.className = 'day-label';
+                lbl.textContent = d;
+                calGrid.appendChild(lbl);
+            });
+
+            const firstDay = new Date(year, m, 1).getDay();
+            const daysInMonth = new Date(year, m + 1, 0).getDate();
+            const prevDays = new Date(year, m, 0).getDate();
+
+            for (let i = firstDay - 1; i >= 0; i--) {
+                const cell = document.createElement('div');
+                cell.className = 'day-cell other-month';
+                cell.textContent = prevDays - i;
+                calGrid.appendChild(cell);
+            }
+
+            for (let d = 1; d <= daysInMonth; d++) {
+                const cell = document.createElement('div');
+                cell.className = 'day-cell';
+                if (today.getDate() === d && today.getMonth() === m) {
+                    cell.classList.add('today');
+                }
+                cell.textContent = d;
+                cell.onclick = () => {
+                    document.querySelectorAll('.day-cell').forEach(c => c.classList.remove('selected'));
+                    cell.classList.add('selected');
+                    document.getElementById('month-label').textContent = `${months[m]} ${year}`;
+                    setTimeout(hideCalendarModal, 250);
+                };
+                calGrid.appendChild(cell);
+            }
+
+            const totalCells = firstDay + daysInMonth;
+            const remaining = (7 - (totalCells % 7)) % 7;
+            for (let i = 1; i <= remaining; i++) {
+                const cell = document.createElement('div');
+                cell.className = 'day-cell other-month';
+                cell.textContent = i;
+                calGrid.appendChild(cell);
+            }
+
+            monthBox.appendChild(calGrid);
+            grid.appendChild(monthBox);
+        }
+    }
+</script>
+{% endblock %}
