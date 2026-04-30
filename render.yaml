@@ -1,0 +1,21 @@
+services:
+  - type: web
+    name: django-todo
+    env: python
+    buildCommand: ./build.sh
+    startCommand: gunicorn --chdir django_todo todoproject.wsgi:application
+    envVars:
+      - key: DATABASE_URL
+        fromDatabase:
+          name: django-todo-db
+          property: connectionString
+      - key: SECRET_KEY
+        generateValue: true
+      - key: DEBUG
+        value: "False"
+      - key: ALLOWED_HOSTS
+        value: "*" # You should update this to your specific Render URL later
+
+databases:
+  - name: django-todo-db
+    plan: free
